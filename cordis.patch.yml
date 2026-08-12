@@ -1,0 +1,4 @@
+- insert:
+    - id: dsh-voice-funasr
+      name: 'dsh-voice-funasr'
+      config: {}

@@ -1,0 +1,2 @@
+onnxruntime>=1.17
+funasr-onnx>=0.4.2

@@ -1,9 +1,40 @@
 import { describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { createRecognizer } from '../src/client/asr.ts'
 import type { AsrDeps, RecognitionHooks, SpeechRecognizer } from '../src/client/asr.ts'
 import { EngineClient } from '../src/client/engine-client.ts'
 import { loadPrefs, updatePrefs } from '../src/client/prefs.ts'
 import { messageOf } from '../src/client/RecorderButton.tsx'
+
+const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
+  dsh?: { client?: { inject?: string[]; platform?: string }; bundle?: { patch?: string } }
+  dshClient?: unknown
+  files?: string[]
+  peerDependencies?: Record<string, string>
+  peerDependenciesMeta?: Record<string, { optional?: boolean }>
+}
+
+describe('DSH rc.2 package contract', () => {
+  it('uses nested client metadata and the Profile Bundle patch', () => {
+    expect(packageJson.dshClient).toBeUndefined()
+    expect(packageJson.dsh?.client).toEqual({
+      inject: [
+        '@deepseek-ai/dsh-client-connection',
+        '@deepseek-ai/dsh-client-locale',
+        '@deepseek-ai/dsh-client-runtime',
+        '@deepseek-ai/dsh-client-ui-conversation',
+        '@deepseek-ai/dsh-client-ui-settings',
+      ],
+      platform: 'web',
+    })
+    expect(packageJson.dsh?.bundle?.patch).toBe('./cordis.patch.yml')
+    expect(packageJson.files).toContain('lib/**/*.js')
+    expect(Object.keys(packageJson.peerDependencies ?? {})).toEqual(
+      Object.keys(packageJson.peerDependenciesMeta ?? {}),
+    )
+    expect(Object.values(packageJson.peerDependenciesMeta ?? {}).every(meta => meta.optional === true)).toBe(true)
+  })
+})
 
 const fakeRecognizer = (): SpeechRecognizer => ({
   phase: 'idle',

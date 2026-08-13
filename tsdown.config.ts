@@ -12,7 +12,8 @@
  * - CSS Modules compile to hashed class maps and inject <style data-plugin> tags.
  */
 import { readFile } from 'node:fs/promises'
-import { basename, dirname, resolve as resolvePath } from 'node:path'
+import { basename, dirname, relative, resolve as resolvePath, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { UserConfig } from 'tsdown'
 import { transform } from 'lightningcss'
 
@@ -23,7 +24,7 @@ const CLIENT_EXTERNALS = [
   'react/jsx-runtime',
   'react-dom',
   'react-dom/client',
-  'cordis',
+  '@deepseek-ai/cordis',
   '@deepseek-ai/dsh-client-connection',
   '@deepseek-ai/dsh-client-connection/client',
   '@deepseek-ai/dsh-client-runtime/client',
@@ -32,6 +33,7 @@ const CLIENT_EXTERNALS = [
 
 const CSS_VIRTUAL_PREFIX = '\0dsh-css:'
 const CSS_VIRTUAL_SUFFIX = '.mjs'
+const REPOSITORY_ROOT = dirname(fileURLToPath(import.meta.url))
 
 function injectTag(pluginId: string, fileId: string, cssText: string): string {
   const tagId = `${pluginId}/${basename(fileId)}`
@@ -84,11 +86,13 @@ export default {
     resolveId(source: string, importer: string | undefined) {
       if (!source.endsWith('.module.css')) return null
       const abs = importer === undefined ? source : resolvePath(dirname(importer), source)
-      return CSS_VIRTUAL_PREFIX + abs + CSS_VIRTUAL_SUFFIX
+      const repositoryPath = relative(REPOSITORY_ROOT, abs).split(sep).join('/')
+      return CSS_VIRTUAL_PREFIX + repositoryPath + CSS_VIRTUAL_SUFFIX
     },
     async load(virtualId: string) {
       if (!virtualId.startsWith(CSS_VIRTUAL_PREFIX)) return null
-      const fileId = virtualId.slice(CSS_VIRTUAL_PREFIX.length, -CSS_VIRTUAL_SUFFIX.length)
+      const repositoryPath = virtualId.slice(CSS_VIRTUAL_PREFIX.length, -CSS_VIRTUAL_SUFFIX.length)
+      const fileId = resolvePath(REPOSITORY_ROOT, repositoryPath)
       this.addWatchFile(fileId)
       const source = await readFile(fileId)
       const { code, exports: cssExports } = transform({

@@ -1,0 +1,6 @@
+packages:
+  - .
+
+# DSH packages are private runtime peers. Contributors link a verified DSH
+# source tree with `pnpm run dev:link-dsh` after installing public tooling.
+autoInstallPeers: false

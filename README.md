@@ -9,6 +9,15 @@ DSH Web UI 的**本地离线语音输入**插件：录音按钮按住说话 → 
 
 与 dsh-voice-chat 的差异化：本地 ASR（中文精准、隐私、断网可用）+ 两段式润色。
 
+## 兼容性
+
+- DSH：`>=0.0.1-rc.2 <0.0.2`（Profile Bundle 与嵌套 `dsh.client` 契约）
+- Node.js：`^22.19.0 || >=24.0.0`
+- Web profile；浏览器需要 `MediaDevices` / `AudioWorklet`，或可用的 Web Speech API 回退
+
+插件由 `package.json#dsh.bundle.patch` 自动加入 profile。不要再把
+`dsh-voice-funasr` 手工插入 profile 的 `cordis.patch.yml`，否则同一 loader id 会重复。
+
 ## 架构
 
 ```
@@ -39,14 +48,17 @@ python3 -m pip install -U funasr-onnx modelscope
 python3 python/download_models.py --model-root ~/.dsh/voice-funasr/models
 ```
 
-默认模型目录 `~/.dsh/voice-funasr/models`（可在插件的 cordis.yml config 里改
+默认模型目录 `~/.dsh/voice-funasr/models`（可在 profile 的插件 config 里改
 `modelRoot`）。三个子目录：`paraformer/`、`vad/`、`punc/`。
 
 ### 3. 安装插件到 profile
 
 ```sh
-dsh plugin --profile web add /path/to/dsh-voice-funasr
-# 或本地链接开发：dsh plugin --profile web add link:/path/to/dsh-voice-funasr
+# 在插件 checkout 内安装开发链接
+dsh plugin --profile web add .
+
+# 或安装已经验收的发布包
+dsh plugin --profile web add ./dsh-voice-funasr-0.1.1.tgz
 ```
 
 重启 `dsh web`。首次说话前可在 设置 → 本地语音（FunASR）→「加载模型」预热
@@ -83,8 +95,20 @@ dsh plugin --profile web add /path/to/dsh-voice-funasr
 ## 开发
 
 ```sh
-pnpm install && pnpm run build && pnpm test
+# DSH 私有依赖是 peer，不写入任何个人 staging 的绝对路径
+pnpm install
+pnpm run dev:link-dsh -- --source /path/to/dsh-0.0.1-rc.2-source
+pnpm run verify
+pnpm pack
 ```
+
+`dev:link-dsh` 会核验源树版本和每个包名，再只在本 checkout 的 `node_modules`
+中创建链接；它不会修改 DSH 源码、active profile 或 `package.json`。发布包通过
+`prepack` 从干净源码重建 `lib/`。建议再在全新的 `DSH_HOME` 中安装 tarball，执行
+`--dump-config` 与真实 Web 启动 smoke。
+
+DSH/React peer 标记为 package-manager optional：它们由所安装的 DSH 与 Web 平台
+提供，不应被树外插件复制一份；版本范围仍用于记录并检查兼容契约。
 
 - host 半：`src/index.ts`（tsc → lib/index.js，@deepseek-ai/* 依赖保持外部）
 - 引擎：`python/funasr_engine.py`（stdio 行 JSON 协议：boot/status/transcribe/warmup/stats/exit）

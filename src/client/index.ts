@@ -5,7 +5,8 @@
  * The recognizer is backend-agnostic: local FunASR engine over the /asr RPC
  * channel, automatic Web Speech fallback when the engine is unavailable.
  */
-import type { Context } from 'cordis'
+import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
+import type { Context } from './context-types.ts'
 import { RecorderButton } from './RecorderButton.tsx'
 import { SettingsPanel } from './SettingsPanel.tsx'
 import { EngineClient } from './engine-client.ts'
@@ -18,7 +19,10 @@ export const inject = ['slots', 'locale', 'connection']
 export const LOCALE_NS = 'voice.funasr'
 
 export function apply(ctx: Context): void {
-  const engine = new EngineClient(ctx.connection.rpc)
+  // Host and Client faces share one declaration program in this out-of-tree
+  // package; the runtime manifest guarantees the browser-side provider here.
+  const connection = ctx.get('connection') as unknown as ConnectionHandle
+  const engine = new EngineClient(connection.rpc)
 
   ctx.effect(() => ctx.locale.register(LOCALE_NS, { zh, en }), 'dsh-voice-funasr: dictionaries')
 

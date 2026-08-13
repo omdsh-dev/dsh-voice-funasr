@@ -1,6 +1,5 @@
 # dsh-voice-funasr
 
-> ⚠️ 内测插件：严禁公开、外发、镜像或分发到任何非授权位置；仓库必须保持 PRIVATE。
 
 DSH Web UI 的**本地离线语音输入**插件：录音按钮按住说话 → 本地 FunASR 引擎
 （paraformer-large + FSMN-VAD + ct-punc，全部官方 int8 ONNX）精准转写 → 可选

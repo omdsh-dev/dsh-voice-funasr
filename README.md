@@ -11,7 +11,7 @@ DSH Web UI 的**本地离线语音输入**插件：录音按钮按住说话 → 
 
 ## 兼容性
 
-- DSH：`>=0.0.1-rc.2 <0.0.2`（Profile Bundle 与嵌套 `dsh.client` 契约）
+- DSH：`>=0.1.0-rc.3 <0.2.0`（Profile Bundle 与嵌套 `dsh.client` 契约）
 - Node.js：`^22.19.0 || >=24.0.0`
 - Web profile；浏览器需要 `MediaDevices` / `AudioWorklet`，或可用的 Web Speech API 回退
 
@@ -58,7 +58,7 @@ python3 python/download_models.py --model-root ~/.dsh/voice-funasr/models
 dsh plugin --profile web add .
 
 # 或安装已经验收的发布包
-dsh plugin --profile web add ./dsh-voice-funasr-0.1.1.tgz
+dsh plugin --profile web add ./dsh-voice-funasr-0.1.2.tgz
 ```
 
 重启 `dsh web`。首次说话前可在 设置 → 本地语音（FunASR）→「加载模型」预热
@@ -97,12 +97,12 @@ dsh plugin --profile web add ./dsh-voice-funasr-0.1.1.tgz
 ```sh
 # DSH 私有依赖是 peer，不写入任何个人 staging 的绝对路径
 pnpm install
-pnpm run dev:link-dsh -- --source /path/to/dsh-0.0.1-rc.2-source
+pnpm run dev:link-dsh -- --runtime /path/to/dsh-0.1.0-rc.3/node_modules
 pnpm run verify
 pnpm pack
 ```
 
-`dev:link-dsh` 会核验源树版本和每个包名，再只在本 checkout 的 `node_modules`
+`dev:link-dsh` 会核验 npm DSH 运行时版本和每个包名，再只在本 checkout 的 `node_modules`
 中创建链接；它不会修改 DSH 源码、active profile 或 `package.json`。发布包通过
 `prepack` 从干净源码重建 `lib/`。建议再在全新的 `DSH_HOME` 中安装 tarball，执行
 `--dump-config` 与真实 Web 启动 smoke。

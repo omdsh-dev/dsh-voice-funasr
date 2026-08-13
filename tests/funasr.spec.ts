@@ -14,7 +14,7 @@ const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.me
   peerDependenciesMeta?: Record<string, { optional?: boolean }>
 }
 
-describe('DSH rc.2 package contract', () => {
+describe('DSH 0.1.0-rc.3 package contract', () => {
   it('uses nested client metadata and the Profile Bundle patch', () => {
     expect(packageJson.dshClient).toBeUndefined()
     expect(packageJson.dsh?.client).toEqual({
@@ -33,6 +33,10 @@ describe('DSH rc.2 package contract', () => {
       Object.keys(packageJson.peerDependenciesMeta ?? {}),
     )
     expect(Object.values(packageJson.peerDependenciesMeta ?? {}).every(meta => meta.optional === true)).toBe(true)
+    const dshPeers = Object.entries(packageJson.peerDependencies ?? {})
+      .filter(([name]) => name.startsWith('@deepseek-ai/dsh-'))
+    expect(dshPeers.length).toBeGreaterThan(0)
+    for (const [, range] of dshPeers) expect(range).toBe('>=0.1.0-rc.3 <0.2.0')
   })
 })
 

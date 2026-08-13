@@ -1,4 +1,4 @@
-/** rc.2 client contracts consumed by the browser half. */
+/** DSH 0.1.0-rc.3 client contracts consumed by the browser half. */
 import type { ClientConnectionRpc } from '@deepseek-ai/dsh-client-connection/client'
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'

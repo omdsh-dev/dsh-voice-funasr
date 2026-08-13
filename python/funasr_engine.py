@@ -40,7 +40,7 @@ MODEL_SUBDIRS = {
     "punc": "punc",        # ct-punc int8 onnx
 }
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 
 
 def log(msg: str) -> None:

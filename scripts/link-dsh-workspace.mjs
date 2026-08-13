@@ -19,19 +19,25 @@ const PACKAGE_PATHS = new Map([
 const rawArgv = process.argv.slice(2)
 const argv = rawArgv[0] === '--' ? rawArgv.slice(1) : rawArgv
 const sourceIndex = argv.indexOf('--source')
-if (sourceIndex === -1 || argv[sourceIndex + 1] === undefined || argv.length !== 2) {
-  throw new Error('usage: pnpm run dev:link-dsh -- --source /absolute/path/to/dsh-source')
+const runtimeIndex = argv.indexOf('--runtime')
+if ((sourceIndex === -1) === (runtimeIndex === -1) || argv.length !== 2) {
+  throw new Error('usage: pnpm run dev:link-dsh -- --runtime /absolute/path/to/node_modules (or --source /absolute/path/to/dsh-source)')
 }
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const sourceRoot = await realpath(resolve(argv[sourceIndex + 1]))
-const rootManifest = await readManifest(join(sourceRoot, 'package.json'))
+const sourceRoot = sourceIndex === -1 ? undefined : await realpath(resolve(argv[sourceIndex + 1]))
+const runtimeRoot = runtimeIndex === -1 ? undefined : await realpath(resolve(argv[runtimeIndex + 1]))
+const rootManifest = await readManifest(sourceRoot === undefined
+  ? join(runtimeRoot, '@deepseek-ai/dsh/package.json')
+  : join(sourceRoot, 'package.json'))
 if (!isCompatibleDshVersion(rootManifest.version)) {
-  throw new Error(`DSH source must be 0.0.1-rc.2 or newer within the 0.0.1 line; found ${String(rootManifest.version)}`)
+  throw new Error(`DSH must satisfy >=0.1.0-rc.3 <0.2.0; found ${String(rootManifest.version)}`)
 }
 
 for (const [expectedName, packagePath] of PACKAGE_PATHS) {
-  const packageRoot = await realpath(join(sourceRoot, packagePath))
+  const packageRoot = await realpath(sourceRoot === undefined
+    ? join(runtimeRoot, ...expectedName.split('/'))
+    : join(sourceRoot, packagePath))
   const manifest = await readManifest(join(packageRoot, 'package.json'))
   if (manifest.name !== expectedName) {
     throw new Error(`${packagePath}/package.json names ${String(manifest.name)}; expected ${expectedName}`)
@@ -48,7 +54,8 @@ async function readManifest(path) {
 }
 
 function isCompatibleDshVersion(version) {
-  if (version === '0.0.1') return true
-  const match = /^0\.0\.1-rc\.(\d+)$/.exec(String(version))
-  return match !== null && Number(match[1]) >= 2
+  const match = /^0\.1\.(\d+)(?:-rc\.(\d+))?$/.exec(String(version))
+  if (match === null) return false
+  const patch = Number(match[1])
+  return patch > 0 || match[2] === undefined || Number(match[2]) >= 3
 }

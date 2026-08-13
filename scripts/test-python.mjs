@@ -16,7 +16,7 @@ try {
   const messages = result.stdout.trim().split(/\r?\n/).map(line => JSON.parse(line))
   const [boot, status, exit] = messages
   if (boot?.type !== 'boot' || boot.ok !== true) throw new Error('missing successful boot envelope')
-  if (status?.id !== 1 || status.ok !== true || status.engine_version !== '0.1.1') {
+  if (status?.id !== 1 || status.ok !== true || status.engine_version !== '0.1.2') {
     throw new Error('invalid status envelope')
   }
   if (!Array.isArray(status.missing) || status.missing.length !== 3) {

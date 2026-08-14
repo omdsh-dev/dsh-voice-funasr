@@ -73,8 +73,13 @@ export function createPcm16Capture(): Pcm16Capture {
           sampleRate: TARGET_RATE,
         },
       })
-      actualRate = stream.getAudioTracks()[0]?.getSettings().sampleRate ?? TARGET_RATE
       context = new AudioContext({ sampleRate: TARGET_RATE })
+      // The worklet emits at the AudioContext's rate, NOT the device rate:
+      // getSettings().sampleRate is e.g. 48000 even when the context runs at
+      // 16000. Reporting the device rate desynced the PCM from the WAV header
+      // the engine writes (payload sample_rate), so speech was interpreted at
+      // 3x speed and every transcription came back wrong.
+      actualRate = context.sampleRate ?? TARGET_RATE
       const blobUrl = URL.createObjectURL(new Blob([WORKLET_SOURCE], { type: 'application/javascript' }))
       try {
         await context.audioWorklet.addModule(blobUrl)

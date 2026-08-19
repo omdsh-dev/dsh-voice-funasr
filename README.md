@@ -1,5 +1,6 @@
 # dsh-voice-funasr
 
+**Author / Maintainer:** [@Zacklinkk](https://github.com/Zacklinkk)
 
 DSH Web UI 的**本地离线语音输入**插件：录音按钮按住说话 → 本地 FunASR 引擎
 （paraformer-large + FSMN-VAD + ct-punc，全部官方 int8 ONNX）精准转写 → 可选

@@ -34,6 +34,19 @@ import sys
 import time
 import traceback
 
+# Force UTF-8 on every stdio stream. On Windows the locale default is the
+# ANSI code page (GBK on zh-CN systems): when stdout is a pipe (as spawned
+# by the host), non-ASCII transcription text is emitted as GBK bytes, which
+# the parent decodes as UTF-8 and every Chinese character turns into
+# replacement characters. Reconfiguring here keeps the line-JSON protocol
+# UTF-8 on every platform.
+for _stream in (sys.stdin, sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError, OSError):
+        pass
+del _stream
+
 MODEL_SUBDIRS = {
     "asr": "paraformer",   # paraformer-large int8 onnx
     "vad": "vad",          # FSMN-VAD int8 onnx

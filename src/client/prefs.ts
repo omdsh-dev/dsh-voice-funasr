@@ -50,16 +50,26 @@ function storage(): Storage | undefined {
 let memoryCache: VoiceFunasrPrefs | null = null
 
 export function loadPrefs(): VoiceFunasrPrefs {
+  // Cache the first resolved snapshot. loadPrefs is passed as the getSnapshot
+  // of useSyncExternalStore, which requires a stable reference between
+  // store changes; returning a fresh object on every call makes React treat
+  // the store as perpetually dirty and the component re-renders forever
+  // until it crashes (caught by the slot error boundary, hiding the button).
+  if (memoryCache !== null) return memoryCache
   const store = storage()
   if (store !== undefined) {
     try {
       const raw = store.getItem(PREFS_KEY)
-      if (raw !== null) return mergePrefs(JSON.parse(raw) as unknown)
+      if (raw !== null) {
+        memoryCache = mergePrefs(JSON.parse(raw) as unknown)
+        return memoryCache
+      }
     } catch {
       // fall through to cache/default
     }
   }
-  return memoryCache ?? { ...DEFAULT_PREFS }
+  memoryCache = { ...DEFAULT_PREFS }
+  return memoryCache
 }
 
 export function updatePrefs(patch: Partial<VoiceFunasrPrefs>): VoiceFunasrPrefs {

@@ -73,8 +73,12 @@ export function defaultModelRoot(): string {
 }
 
 export function engineScriptPath(): string {
-  // lib/index.js (bundled) -> package root/python/funasr_engine.py
-  return fileURLToPath(new URL('../python/funasr_engine.py', import.meta.url))
+  // tsc compiles this file to lib/engine/manager.js (the src tree is kept;
+  // tsdown only bundles the client half), so the package root is two levels
+  // up. The old '../python' resolved from lib/engine/manager.js to a
+  // nonexistent lib/python directory, making the spawn cwd invalid and the
+  // engine fail with ENOENT on every launch.
+  return fileURLToPath(new URL('../../python/funasr_engine.py', import.meta.url))
 }
 
 export class EngineManager {
